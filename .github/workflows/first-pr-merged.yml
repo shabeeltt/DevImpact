@@ -36,7 +36,7 @@ jobs:
             // Determine the case and generate appropriate message
             let message;
 
-            if (mergedPrs.length === 1) {
+            if (mergedPrs.length <= 1) {
               message = `
               🎊 **Welcome, @${creator}!** Your first contribution has been merged! 🚀
               
