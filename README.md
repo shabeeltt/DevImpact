@@ -118,12 +118,10 @@ Final Score =
 
 ### 🖥️ Desktop View
 
-<!-- ![Desktop](./public/screenshots/desktop.png) -->
 <img src="./public/screenshots/desktop.png" alt="Desktop View" width="800" />
 
 ### 📱 Mobile View
 
-<!-- ![Mobile](./public/screenshots/mobile.png) -->
 <img src="./public/screenshots/mobile.png" alt="Mobile View" width="300" />
 
 ---
