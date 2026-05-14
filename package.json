@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint .",
     "test": "vitest",
-    "test:watch": "vitest --watch"
+    "test:watch": "vitest --watch",
+    "redis:up": "docker compose up -d redis",
+    "redis:down": "docker compose stop redis"
   },
   "dependencies": {
     "@octokit/graphql": "^9.0.3",
@@ -22,6 +24,7 @@
     "react-dom": "^19.2.4",
     "react-icons": "^5.6.0",
     "recharts": "^2.12.7",
+    "redis": "^5.12.1",
     "tailwind-merge": "^2.5.3"
   },
   "devDependencies": {
