@@ -1,15 +1,4 @@
 
-export type ReactionSummary = {
-  thumbsUp: number;
-  thumbsDown: number;
-  heart: number;
-  hooray: number;
-  rocket: number;
-  eyes: number;
-  confused: number;
-  laugh: number;
-};
-
 export type RepoLanguageEdge = {
   size: number;
   node: {
@@ -25,14 +14,12 @@ type CommunityRepositoryNode = {
   nameWithOwner: string;
   stargazerCount: number;
   owner: { login: string };
-  languages?: RepoLanguages;
 };
 
 export type IssueNode = {
   title: string;
   url?: string;
   comments: { totalCount: number };
-  reactions?: ReactionSummary;
   repository: CommunityRepositoryNode;
 };
 
@@ -40,7 +27,6 @@ export type DiscussionNode = {
   title: string;
   url?: string;
   comments: { totalCount: number };
-  reactions?: ReactionSummary;
   repository: CommunityRepositoryNode;
 };
 

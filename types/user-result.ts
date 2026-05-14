@@ -19,6 +19,11 @@ export type UserResult = {
     forks?: number;
     watchers?: number;
     score?: number;
+    languageMatch?: number;
+    topLanguages?: {
+      name: string;
+      percentage: number;
+    }[];
   }[];
   topPullRequests: {
     repo?: string;
@@ -28,6 +33,11 @@ export type UserResult = {
     url?: string;
     deletions?: number;
     additions?: number;
+    languageMatch?: number;
+    topLanguages?: {
+      name: string;
+      percentage: number;
+    }[];
   }[];
   topCommunityContributions?: {
     type: "issue" | "discussion";
@@ -78,5 +88,6 @@ export type UserResult = {
   };
   signals?: ScoringSignals;
   explanations?: ScoringExplanations;
+  scoreVersion?: string;
   isWinner?: boolean;
 };
