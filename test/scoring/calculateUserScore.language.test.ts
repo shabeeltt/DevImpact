@@ -92,7 +92,7 @@ describe("calculateUserScore - language scoring", () => {
     );
   });
 
-  test("missing language data uses neutral factor", () => {
+  test("missing language data uses min factor", () => {
     const repo = makeRepo({
       languages: makeRepoLanguages([]),
     });
@@ -106,7 +106,7 @@ describe("calculateUserScore - language scoring", () => {
     );
 
     expect(result.languageScores?.repoScore).toBeCloseTo(
-      result.repoScore * getLanguageFactor(0.5),
+      result.repoScore * getLanguageFactor(0),
       10,
     );
   });

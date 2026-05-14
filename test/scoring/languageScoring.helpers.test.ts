@@ -55,9 +55,9 @@ describe("language scoring helpers", () => {
     expect(getLanguageMatch(undefined, [])).toBe(1);
   });
 
-  test("getLanguageMatch returns 0.5 when repo language data is missing", () => {
-    expect(getLanguageMatch(undefined, ["typescript"])).toBe(0.5);
-    expect(getLanguageMatch(makeRepoLanguages([]), ["typescript"])).toBe(0.5);
+  test("getLanguageMatch returns 0 when repo language data is missing", () => {
+    expect(getLanguageMatch(undefined, ["typescript"])).toBe(0);
+    expect(getLanguageMatch(makeRepoLanguages([]), ["typescript"])).toBe(0);
   });
 
   test("getLanguageFactor applies soft penalty", () => {

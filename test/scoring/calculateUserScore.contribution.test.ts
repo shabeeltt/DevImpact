@@ -71,16 +71,6 @@ describe("calculateUserScore - contribution scoring", () => {
   test("external issues are counted", () => {
     const externalIssue = makeIssue({
       comments: { totalCount: 6 },
-      reactions: {
-        thumbsUp: 3,
-        thumbsDown: 0,
-        heart: 1,
-        hooray: 1,
-        rocket: 0,
-        eyes: 1,
-        confused: 0,
-        laugh: 0,
-      },
       repository: {
         nameWithOwner: "external-owner/repo",
         stargazerCount: 120,
@@ -110,16 +100,6 @@ describe("calculateUserScore - contribution scoring", () => {
   test("discussions are counted when provided", () => {
     const discussion = makeDiscussion({
       comments: { totalCount: 4 },
-      reactions: {
-        thumbsUp: 2,
-        thumbsDown: 0,
-        heart: 1,
-        hooray: 0,
-        rocket: 1,
-        eyes: 1,
-        confused: 0,
-        laugh: 0,
-      },
       repository: {
         nameWithOwner: "external-owner/repo",
         stargazerCount: 80,
@@ -146,41 +126,21 @@ describe("calculateUserScore - contribution scoring", () => {
     expect(result.signals.externalDiscussionsCounted).toBe(1);
   });
 
-  test("issues with negative reactions are penalized", () => {
-    const positiveIssue = makeIssue({
-      comments: { totalCount: 2 },
-      reactions: {
-        thumbsUp: 12,
-        thumbsDown: 0,
-        heart: 1,
-        hooray: 0,
-        rocket: 0,
-        eyes: 1,
-        confused: 0,
-        laugh: 0,
-      },
+  test("issues with more comments score higher", () => {
+    const lowerDiscussionIssue = makeIssue({
+      comments: { totalCount: 1 },
       repository: {
         nameWithOwner: "external-owner/repo",
         stargazerCount: 60,
         owner: { login: "external-owner" },
       },
     });
-    const negativeIssue = makeIssue({
-      comments: { totalCount: 2 },
-      reactions: {
-        thumbsUp: 1,
-        thumbsDown: 10,
-        heart: 0,
-        hooray: 0,
-        rocket: 0,
-        eyes: 0,
-        confused: 4,
-        laugh: 0,
-      },
-      repository: positiveIssue.repository,
+    const higherDiscussionIssue = makeIssue({
+      comments: { totalCount: 8 },
+      repository: lowerDiscussionIssue.repository,
     });
 
-    const positiveResult = calculateUserScore(
+    const lowerResult = calculateUserScore(
       makeUserScoreInput({
         repos: [
           makeRepo({
@@ -190,11 +150,11 @@ describe("calculateUserScore - contribution scoring", () => {
           }),
         ],
         pullRequests: [],
-        issues: [positiveIssue],
+        issues: [lowerDiscussionIssue],
       }),
       "octocat",
     );
-    const negativeResult = calculateUserScore(
+    const higherResult = calculateUserScore(
       makeUserScoreInput({
         repos: [
           makeRepo({
@@ -204,27 +164,17 @@ describe("calculateUserScore - contribution scoring", () => {
           }),
         ],
         pullRequests: [],
-        issues: [negativeIssue],
+        issues: [higherDiscussionIssue],
       }),
       "octocat",
     );
 
-    expect(negativeResult.contributionScore).toBeLessThan(positiveResult.contributionScore);
+    expect(higherResult.contributionScore).toBeGreaterThan(lowerResult.contributionScore);
   });
 
-  test("issues with zero comments and reactions get reduced score", () => {
+  test("issues with zero comments get reduced score", () => {
     const emptySignalIssue = makeIssue({
       comments: { totalCount: 0 },
-      reactions: {
-        thumbsUp: 0,
-        thumbsDown: 0,
-        heart: 0,
-        hooray: 0,
-        rocket: 0,
-        eyes: 0,
-        confused: 0,
-        laugh: 0,
-      },
       repository: {
         nameWithOwner: "external-owner/repo",
         stargazerCount: 500,
@@ -233,16 +183,6 @@ describe("calculateUserScore - contribution scoring", () => {
     });
     const meaningfulIssue = makeIssue({
       comments: { totalCount: 5 },
-      reactions: {
-        thumbsUp: 5,
-        thumbsDown: 0,
-        heart: 1,
-        hooray: 1,
-        rocket: 1,
-        eyes: 1,
-        confused: 0,
-        laugh: 0,
-      },
       repository: emptySignalIssue.repository,
     });
 
@@ -304,16 +244,6 @@ describe("calculateUserScore - contribution scoring", () => {
           makeIssue({
             title: `Issue ${index + 1}`,
             comments: { totalCount: 20 },
-            reactions: {
-              thumbsUp: 10,
-              thumbsDown: 0,
-              heart: 3,
-              hooray: 2,
-              rocket: 2,
-              eyes: 2,
-              confused: 0,
-              laugh: 1,
-            },
             repository: {
               nameWithOwner: `external-owner/repo-${index + 1}`,
               stargazerCount: 500 + index * 20,

@@ -3,7 +3,6 @@ import type {
   DiscussionNode,
   IssueNode,
   PullRequestNode,
-  ReactionSummary,
   RepoLanguages,
   RepoNode,
 } from "@/types/github";
@@ -56,22 +55,10 @@ const defaultContributions: ContributionTotals = {
   totalIssueContributions: 0,
 };
 
-const defaultReactions: ReactionSummary = {
-  thumbsUp: 0,
-  thumbsDown: 0,
-  heart: 0,
-  hooray: 0,
-  rocket: 0,
-  eyes: 0,
-  confused: 0,
-  laugh: 0,
-};
-
 const defaultIssue: IssueNode = {
   title: "Issue about improving docs",
   url: "https://example.com/external-owner/repo/issues/1",
   comments: { totalCount: 2 },
-  reactions: defaultReactions,
   repository: {
     nameWithOwner: "external-owner/repo",
     stargazerCount: 10,
@@ -83,7 +70,6 @@ const defaultDiscussion: DiscussionNode = {
   title: "Discussion about roadmap",
   url: "https://example.com/external-owner/repo/discussions/1",
   comments: { totalCount: 2 },
-  reactions: defaultReactions,
   repository: {
     nameWithOwner: "external-owner/repo",
     stargazerCount: 10,
@@ -134,7 +120,6 @@ export function makeIssue(overrides: Partial<IssueNode> = {}): IssueNode {
     ...defaultIssue,
     ...overrides,
     comments: overrides.comments ?? defaultIssue.comments,
-    reactions: overrides.reactions ?? defaultIssue.reactions,
     repository: overrides.repository ?? defaultIssue.repository,
   };
 }
@@ -146,7 +131,6 @@ export function makeDiscussion(
     ...defaultDiscussion,
     ...overrides,
     comments: overrides.comments ?? defaultDiscussion.comments,
-    reactions: overrides.reactions ?? defaultDiscussion.reactions,
     repository: overrides.repository ?? defaultDiscussion.repository,
   };
 }

@@ -35,16 +35,6 @@ describe("calculateUserScore - final score behavior", () => {
         issues: [
           makeIssue({
             comments: { totalCount: 6 },
-            reactions: {
-              thumbsUp: 4,
-              thumbsDown: 0,
-              heart: 1,
-              hooray: 1,
-              rocket: 1,
-              eyes: 1,
-              confused: 0,
-              laugh: 0,
-            },
             repository: {
               nameWithOwner: "external-owner/repo",
               stargazerCount: 90,
