@@ -2,7 +2,6 @@ import type {
   DiscussionNode,
   IssueNode,
   PullRequestNode,
-  ReactionSummary,
   RepoNode,
 } from "@/types/github";
 
@@ -175,45 +174,14 @@ export function sumPRScores(
   return total;
 }
 
-function readReactionTotals(
-  reactions?: ReactionSummary,
-): { positive: number; neutral: number; negative: number } {
-  if (!reactions) {
-    return { positive: 0, neutral: 0, negative: 0 };
-  }
-
-  return {
-    positive:
-      reactions.thumbsUp +
-      reactions.heart * 1.2 +
-      reactions.hooray * 1.2 +
-      reactions.rocket * 1.3,
-    neutral: reactions.eyes * 0.4 + reactions.laugh * 0.2,
-    negative: reactions.thumbsDown * 1.5 + reactions.confused,
-  };
-}
-
 export function expectedCommunityScore(
   item: IssueNode | DiscussionNode,
 ): number {
   const comments = Math.max(0, item.comments.totalCount);
-  const { positive, neutral, negative } = readReactionTotals(item.reactions);
-  const reactionQuality = Math.max(0, positive + neutral - negative);
-  const reactionTotal = positive + neutral + negative;
-  const negativeRatio = reactionTotal > 0 ? negative / reactionTotal : 0;
+  let score = safeLog(item.repository.stargazerCount) * safeLog(comments);
 
-  let score =
-    safeLog(item.repository.stargazerCount) *
-    safeLog(comments + reactionQuality);
-
-  if (comments === 0 && reactionQuality === 0) {
+  if (comments === 0) {
     score *= 0.2;
-  }
-
-  if (negativeRatio > 0.5) {
-    score *= 0.2;
-  } else if (negativeRatio > 0.3) {
-    score *= 0.6;
   }
 
   return score;

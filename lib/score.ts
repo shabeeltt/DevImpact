@@ -3,7 +3,6 @@ import type {
   DiscussionNode,
   IssueNode,
   PullRequestNode,
-  ReactionSummary,
   RepoNode,
 } from "@/types/github";
 import type {
@@ -277,58 +276,18 @@ function calculatePRScore(
   };
 }
 
-function readReactionTotals(
-  reactions?: ReactionSummary,
-): { positive: number; neutral: number; negative: number } {
-  if (!reactions) {
-    return { positive: 0, neutral: 0, negative: 0 };
-  }
-
-  const positive =
-    reactions.thumbsUp * 1 +
-    reactions.heart * 1.2 +
-    reactions.hooray * 1.2 +
-    reactions.rocket * 1.3;
-  const neutral = reactions.eyes * 0.4 + reactions.laugh * 0.2;
-  const negative = reactions.thumbsDown * 1.5 + reactions.confused * 1;
-
-  return {
-    positive: sanitizeNumber(positive),
-    neutral: sanitizeNumber(neutral),
-    negative: sanitizeNumber(negative),
-  };
-}
-
 function calculateCommunityItemScore(
   item: IssueNode | DiscussionNode,
-): { score: number; reactionQuality: number; negativeRatio: number } {
+): number {
   const repoStars = Math.max(0, item.repository.stargazerCount);
   const comments = Math.max(0, item.comments.totalCount);
-  const { positive, neutral, negative } = readReactionTotals(item.reactions);
+  let score = safeLog(repoStars) * safeLog(comments);
 
-  const reactionQuality = Math.max(0, positive + neutral - negative);
-  const reactionTotal = positive + neutral + negative;
-  const negativeRatio = reactionTotal > 0 ? negative / reactionTotal : 0;
-
-  let score =
-    safeLog(repoStars) *
-    safeLog(Math.max(0, comments + reactionQuality));
-
-  if (comments === 0 && reactionQuality === 0) {
+  if (comments === 0) {
     score *= 0.2;
   }
 
-  if (negativeRatio > 0.5) {
-    score *= 0.2;
-  } else if (negativeRatio > 0.3) {
-    score *= 0.6;
-  }
-
-  return {
-    score: sanitizeNumber(score),
-    reactionQuality: sanitizeNumber(reactionQuality),
-    negativeRatio: sanitizeNumber(negativeRatio),
-  };
+  return sanitizeNumber(score);
 }
 
 type CommunityScoreResult = {
@@ -357,7 +316,7 @@ function calculateContributionScore(
       continue;
     }
 
-    const { score } = calculateCommunityItemScore(issue);
+    const score = calculateCommunityItemScore(issue);
     details.push({
       type: "issue",
       item: issue,
@@ -373,7 +332,7 @@ function calculateContributionScore(
       continue;
     }
 
-    const { score } = calculateCommunityItemScore(discussion);
+    const score = calculateCommunityItemScore(discussion);
     details.push({
       type: "discussion",
       item: discussion,
@@ -510,35 +469,6 @@ function calculateLanguagePRScore(
   };
 }
 
-function calculateLanguageContributionScore(
-  communityDetails: CommunityContributionDetail[],
-  selectedLanguages: string[],
-): number {
-  const allHaveNoLanguageData = communityDetails.every(
-    (detail) => !hasLanguageData(detail.item.repository.languages),
-  );
-
-  if (allHaveNoLanguageData) {
-    return communityDetails.reduce((sum, detail, index) => {
-      return sum + detail.score * getDiminishingWeight(index);
-    }, 0);
-  }
-
-  const adjusted = communityDetails
-    .map((detail) => {
-      const languageMatch = getLanguageMatch(
-        detail.item.repository.languages,
-        selectedLanguages,
-      );
-      return sanitizeNumber(detail.score * getLanguageFactor(languageMatch));
-    })
-    .sort((a, b) => b - a);
-
-  return adjusted.reduce((sum, score, index) => {
-    return sum + score * getDiminishingWeight(index);
-  }, 0);
-}
-
 type TopRepo = {
   name: string;
   url?: string;
@@ -546,6 +476,10 @@ type TopRepo = {
   forks: number;
   watchers: number;
   score: number;
+  topLanguages?: {
+    name: string;
+    percentage: number;
+  }[];
 };
 
 type TopPullRequest = {
@@ -556,6 +490,10 @@ type TopPullRequest = {
   score: number;
   additions: number;
   deletions: number;
+  topLanguages?: {
+    name: string;
+    percentage: number;
+  }[];
 };
 
 type TopCommunityContribution = {
@@ -641,7 +579,7 @@ const scoringExplanations: ScoringExplanations = {
   contribution: [
     "Contribution score is based on external issues and discussions only.",
     "Commits and pull requests are excluded to avoid double-counting.",
-    "Negative reactions reduce issue and discussion impact.",
+    "Issue and discussion impact is based on repository visibility and discussion activity.",
     "Contribution score is capped so it cannot dominate the final score.",
   ],
   overall: [
@@ -717,9 +655,7 @@ export function calculateUserScore(
       selectedLanguages,
     );
 
-    let languageContributionScore = sanitizeNumber(
-      calculateLanguageContributionScore(communityScore.details, selectedLanguages),
-    );
+    let languageContributionScore = contributionScore;
     languageContributionScore = Math.min(
       languageContributionScore,
       0.3 * (languageRepoScore.total + languagePRScore.total),
@@ -797,7 +733,7 @@ export function calculateUserScore(
       "Pull request language match uses the target repository language distribution as an approximation.",
       "Non-matching repositories are softly reduced instead of fully ignored.",
       "Repositories with missing language data use a neutral language factor.",
-      "Community contribution language matching uses repository language data when available.",
+      "Language matching is applied to repositories and pull requests only.",
     ];
   }
 
@@ -828,6 +764,7 @@ export function calculateUserScore(
       forks: item.repo.forkCount,
       watchers: item.repo.watchers.totalCount,
       score: roundScore(item.score),
+      topLanguages: getTopLanguages(item.repo.languages, 3),
     })),
     topPullRequests: prScore.details.slice(0, 3).map((item) => ({
       repo: item.pr.repository.nameWithOwner,
@@ -837,6 +774,7 @@ export function calculateUserScore(
       score: roundScore(item.score),
       additions: item.pr.additions,
       deletions: item.pr.deletions,
+      topLanguages: getTopLanguages(item.pr.repository.languages, 3),
     })),
     topCommunityContributions: communityScore.details.slice(0, 3).map((item) => ({
       type: item.type,

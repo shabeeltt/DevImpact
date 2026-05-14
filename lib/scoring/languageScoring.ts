@@ -71,7 +71,7 @@ export function getLanguageMatch(
   const distribution = getLanguageDistribution(languages);
   const distributionKeys = Object.keys(distribution);
   if (distributionKeys.length === 0) {
-    return 0.5;
+    return 0;
   }
 
   let match = 0;
